@@ -16,11 +16,13 @@
 
 import argparse
 import re
+import textwrap
 
 from nl_api import xml2entities
 
 
 BIGQUERY_TABLE_FORMAT = re.compile(r'([\w.:-]+:)?\w+\.\w+$')
+
 
 def bq_table_format_validator(bigquery_table):
     if not BIGQUERY_TABLE_FORMAT.match(bigquery_table):
@@ -42,6 +44,17 @@ if __name__ == '__main__':
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('src', type=gcs_uri)
     parser.add_argument('dest')
+    parser.add_argument(
+        '--end', type=int, default=None, help=textwrap.dedent('''
+        If specified, execute a partial pipeline up to, but not including,
+        this step (0-indexed). In this case, the `dest` argument should be
+        the gs:// path prefix the results should be output to.'''))
+    parser.add_argument(
+        '--start', type=int, default=None, help=textwrap.dedent('''
+        If specified, execute a partial pipeline beginning at this step
+        (0-indexed). In this case, the `src` argument is assumed to be a
+        gs:// glob pattern referencing the results of an earlier invocation
+        that had specified an `--end`.'''))
 
     args, pipeline_args = parser.parse_known_args()
     try:
@@ -49,4 +62,7 @@ if __name__ == '__main__':
     except argparse.ArgumentTypeError:
         dest = bq_table_format_validator(args.dest)
 
-    xml2entities.main(args.src, args.dest, pipeline_args)
+    xml2entities.main(
+        args.src, args.dest,
+        start=args.start, end=args.end,
+        pipeline_args=pipeline_args)

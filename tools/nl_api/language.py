@@ -30,7 +30,8 @@ _service = None
 def get_service():
     global _service
     if not _service:
-        credentials = GoogleCredentials.get_application_default()
+        credentials = GoogleCredentials.get_application_default(
+        ).create_scoped(['https://www.googleapis.com/auth/cloud-platform'])
         http = httplib2shim.Http()
         credentials.authorize(http)
         _service = discovery.build('language', 'v1beta1', http=http)

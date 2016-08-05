@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Parses all articles in a Wikipedia xml dump for entities and sentiment."""
+"""Parses all articles in a Wikipedia XML dump for entities and sentiment."""
 
 import json
 import logging
@@ -52,7 +52,7 @@ def _to_unicode(text):
 
 
 def html_to_text(content):
-    """Filter out html from the text."""
+    """Filter out HTML from the text."""
     text = content['text']
 
     try:
@@ -216,26 +216,41 @@ class BatchFn(core.DoFn):
             yield self._batch
 
 
-def main(gcs_path, out, pipeline_args):
+def main(gcs_path, out, start=None, end=None, pipeline_args=None):
+    steps = [
+        apache_beam.FlatMap('Parse XML and filter', parse_xml),
+        apache_beam.Map(
+            'Coerce "wikitext" key to string type',
+            force_string_function('wikitext')),
+        apache_beam.FlatMap('Parse markdown into plaintext', parse_wikitext),
+        apache_beam.Map(
+            'Coerce "text" key to string type', force_string_function('text')),
+        apache_beam.Map(
+            'Filter out any vestigial HTML', html_to_text),
+
+        core.ParDo('batch', BatchFn(10)),
+        apache_beam.FlatMap(
+            'Entities (batch)', analyze_entities_batch),
+    ]
+
     p = apache_beam.Pipeline(argv=pipeline_args)
-    value = p | apache_beam.Read(
-        'Read XML', custom_sources.XmlFileSource('page', gcs_path))
 
-    value = value | apache_beam.FlatMap('Parse XML and filter', parse_xml)
-    value = value | apache_beam.Map(
-        'Coerce wikitext to string', force_string_function('wikitext'))
-    value = value | apache_beam.FlatMap('Wikitext to text', parse_wikitext)
-    value = value | apache_beam.Map(
-        'Coerce text to string', force_string_function('text'))
-    value = value | apache_beam.Map(
-        'Filter out any vestigial html', html_to_text)
+    if start:
+        value = p | apache_beam.Read(
+            'Pick up at step {}'.format(start), apache_beam.io.TextFileSource(
+                gcs_path)) | \
+            apache_beam.Map('Parse JSON', json.loads)
+    else:
+        value = p | apache_beam.Read(
+            'Read XML', custom_sources.XmlFileSource('page', gcs_path))
 
-    value = value | core.ParDo('batch', BatchFn(10))
-    value = value | apache_beam.FlatMap(
-        'Entities (batch)', analyze_entities_batch)
-    # value = value | apache_beam.FlatMap('Entities', analyze_entities)
-    if out.startswith('gs://'):
-        value = value | apache_beam.Map('to json', json.dumps) | \
+    for step in steps[start:end]:
+        value = value | step
+
+    if end:
+        if not out.startswith('gs://'):
+            raise ValueError('Output must be GCS path if an end is specified.')
+        value = value | apache_beam.Map('to JSON', json.dumps) | \
             apache_beam.Write('Dump to GCS', apache_beam.io.TextFileSink(out))
     else:
         value = value | apache_beam.Write(
@@ -255,6 +270,6 @@ def main(gcs_path, out, pipeline_args):
                 create_disposition=(
                     apache_beam.io.BigQueryDisposition.CREATE_IF_NEEDED),
                 write_disposition=(
-                    apache_beam.io.BigQueryDisposition.WRITE_TRUNCATE)))
+                    apache_beam.io.BigQueryDisposition.WRITE_APPEND)))
 
     p.run()
