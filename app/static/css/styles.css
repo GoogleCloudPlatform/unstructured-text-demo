@@ -1,0 +1,276 @@
+/**
+ * Copyright 2015 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.demo-ribbon {
+  width: 100%;
+  height: 40vh;
+  background-color: #3F51B5;
+  -webkit-flex-shrink: 0;
+      -ms-flex-negative: 0;
+          flex-shrink: 0;
+}
+
+.demo-main {
+  margin-top: -35vh;
+  -webkit-flex-shrink: 0;
+      -ms-flex-negative: 0;
+          flex-shrink: 0;
+}
+
+.demo-header .mdl-layout__header-row {
+  padding-left: 40px;
+}
+
+.demo-container {
+  max-width: 1600px;
+  width: calc(100% - 16px);
+  margin: 0 auto;
+}
+
+.demo-content {
+  border-radius: 2px;
+  padding: 80px 56px;
+  margin-bottom: 80px;
+}
+
+.demo-layout.is-small-screen .demo-content {
+  padding: 40px 28px;
+}
+
+.demo-content h3 {
+  margin-top: 48px;
+}
+
+.demo-footer {
+  padding-left: 40px;
+}
+
+.demo-footer .mdl-mini-footer--link-list a {
+  font-size: 13px;
+}
+
+.neg {
+  color: #F44336;
+}
+
+.pos {
+  color: #4CAF50;
+}
+
+span.token {
+  position: relative;
+  cursor: default;
+  border-bottom: 1px dotted rgba(120, 89, 0, .7);
+  cursor: pointer;
+  transition: box-shadow .2s .1s;
+}
+span.token:hover {
+  border-bottom: 1px solid rgba(120, 89, 0, .8);
+}
+span.token div.part-of-speech {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255,255,255,.5);
+  background-color: rgba(10,215, 94, .9);
+}
+span.token svg {
+  position: absolute;
+  pointer-events: none;
+}
+span.token svg line {
+  stroke: rgba(98,123,22,.8);
+  stroke-width: 10px;
+}
+span.token.highlight {
+  box-shadow: 0 0 10px 0 rgba(0,0,0,.5);
+  color: rgba(0,0,0,1);
+}
+#article-content {
+  position: relative;
+  transition: color .2s .1s;
+}
+#article-content.highlighting {
+  color: rgba(0,0,0,.3);
+}
+
+svg.graph line {
+  stroke: rgba(98,123,22,.8);
+}
+svg.graph text {
+  cursor: pointer;
+}
+
+#overlay {
+  position: fixed;
+  top:0;left:0;right:0;bottom:0;
+  z-index:100;
+  display: none;
+}
+.grey-screen {
+  position: absolute;
+  top:0;right:0;left:0;bottom:0;
+  background:rgba(255,255,255,.5);
+  display:none;
+  z-index:100;
+}
+#overlay>* {
+  display: none;
+}
+#overlay>.mdl-spinner {
+  position: absolute;
+  top:50%;left:50%;
+  z-index: 100;
+  margin:-.5rem 0 0 -.5rem;
+}
+.entity-graph, #page-list {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 101;
+  width: auto;
+}
+.entity-graph .mdl-card__title, #page-list .mdl-card__title {
+  color: white;
+  background-color: #46B6AC
+}
+.material-icons.help {
+  cursor: help;
+}
+
+#page-list {
+  max-width: 30rem;
+  max-height: 90%;
+  overflow: auto;
+}
+#page-list ul {
+  margin-top: 0;
+}
+
+a.dotted {
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px dotted rgba(120, 89, 0, .7);
+}
+#page-list .page-list li {
+  padding-top: .2em;
+  padding-bottom: .2em;
+  min-height: 1em;
+  line-height: 1em;
+}
+
+#showcase {
+  position: fixed;
+  z-index: 200;
+  display: none;
+  overflow: none;
+  width: 100%;
+  height: 100%;
+}
+#showcase .showcase-overlay {
+  position: absolute;
+  border-style: solid;
+  border-color: rgba(51, 80, 117, .87);
+  border-radius: 50%;
+}
+#showcase .step {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: white;
+  font-size: 2rem;
+  line-height: 1em;
+  display: none;
+  width: 50%;
+  min-width: 20em;
+  max-width: 100%;
+}
+#showcase .step>div:first-child {
+  font-size: 3rem;
+  line-height: 1.2em;
+}
+#showcase .step button {
+  margin-top: .9em;
+}
+
+.top10 {
+  float: right;
+  margin: 0 .5rem .5rem;
+  border: 1px solid rgba(0,0,0,.5);
+  padding: .5rem;
+  width: 30%;
+  min-width: 17rem;
+}
+
+.top10 h4 {
+  margin: 0;
+  position: relative;
+  display: inline-block;
+  clear: both;
+}
+.top10 h4 span.sub {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  font-size: .5em;
+  line-height:1;
+  width: 100%;
+  text-align: center;
+}
+.top10 .material-icons {
+  vertical-align: bottom;
+}
+.top10 li {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+h1.page-title {
+  margin: 0 0 3rem;
+  line-height: 1em;
+  position: relative;
+}
+.sentiment {
+  font-size: .7rem;
+  line-height: 1em;
+  font-family: monospace;
+  position: absolute;
+  top:100%;
+  left:0;
+}
+.sentiment svg {
+  font-size: .4rem;
+  font-family: monospace;
+}
+.sentiment #rect1 { fill: url(#Gradient1); }
+.sentiment .stop1 { stop-color: red; }
+.sentiment .stop2 { stop-color: gray; stop-opacity: .2; }
+.sentiment .stop3 { stop-color: green; }
+.sentiment .axis path, .sentiment .axis line {
+  fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+.sentiment .axis .triangle {
+  fill: rgba(0,0,0,.4);
+}
+.sentiment .axis .domain {
+  display: none;
+}

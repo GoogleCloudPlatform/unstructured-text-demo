@@ -1,0 +1,12 @@
+# This requirements file lists all third-party dependencies for this project.
+#
+# Run 'pip install -r requirements.txt -t lib/' to install these dependencies
+# in `lib/` subdirectory.
+#
+# Note: The `lib` directory is added to `sys.path` by `appengine_config.py`.
+Flask==0.10
+requests==2.10.0
+requests-toolbelt==0.6.0
+lxml==3.3.3
+google-api-python-client==1.5.0
+mwparserfromhell==0.4.3
