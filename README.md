@@ -49,6 +49,10 @@ This demo is split up into two parts:
   * Download a [service account key][service-account] and set the
     `GOOGLE_APPLICATION_CREDENTIALS` environment variable, as [detailed
     here][adc].
+  * Install the dependencies into a `lib/` directory:
+
+      $ cd app/
+      $ pip install -r requirements.txt -t lib/
 
 [gcloud]: https://cloud.google.com/sdk/gcloud/
 [gcs]: https://cloud.google.com/storage
