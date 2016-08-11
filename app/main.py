@@ -37,7 +37,7 @@ app = Flask(__name__)
 
 
 DATASET = 'nl_wikipedia'
-TABLE = 'wikipedia_entities'
+TABLE = 'nl_wikipedia'
 COMMON_ENTITIES_QUERY = '''
 select top(entity_name, {limit}), count(*)
 from [{dataset}.{table}]
