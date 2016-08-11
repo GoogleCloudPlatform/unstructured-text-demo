@@ -22,7 +22,7 @@ import requests
 WIKIPEDIA_BASE = 'https://en.wikipedia.org/w/api.php'
 HEADERS = {
     'User-Agent': ('GCP-NL-Demo/0.1 (http://github.com/GoogleCloudPlatform'
-                   '/python-docs-samples;)',
+                   '/python-docs-samples;)'),
 }
 
 
