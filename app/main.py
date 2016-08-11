@@ -47,6 +47,8 @@ where article_id in (
     where {column} = '{value}')
 and {column} != '{value}'
 '''.strip()
+COMMON_ENTITIES_WITH_ENTITY_TYPE_QUERY = (
+    '{} and entity_type = "{{entity_type}}"'.format(COMMON_ENTITIES_QUERY))
 PAGES_WITH_BOTH_QUERY = '''
 select article_title, article_id
 from [{dataset}.{table}]
@@ -59,6 +61,9 @@ limit {limit}
 '''.strip()
 URL_REGEX = re.compile(r'^https?://(\w+\.?)+/[\w:@%_.~!?$&\'()*+,;=/-]+$')
 NAME_REGEX = re.compile(r'^[\w \'.:-]+$')
+ENTITY_TYPES = set((
+    'PERSON', 'LOCATION', 'ORGANIZATION', 'EVENT', 'WORK_OF_ART',
+    'CONSUMER_GOOD'))
 
 
 cache = GAEMemcachedCache()
@@ -118,10 +123,12 @@ def index():
 
 
 @app.route('/common_entities')
-@cached(query_params=['wiki', 'limit'])
+@cached(query_params=['wiki', 'type', 'limit'])
 def common_entities():
     limit = min(int(request.args.get('limit', 10)), 50)
     wiki = request.args.get('wiki')
+    entity_type = request.args.get('type')
+
     if wiki:
         if not URL_REGEX.match(wiki):
             raise ValidationError('URL does not validate: {}'.format(wiki))
@@ -136,12 +143,14 @@ def common_entities():
 
     sanitized_entity = re.sub(r"'", "\\'", entity)
 
+    query = (COMMON_ENTITIES_WITH_ENTITY_TYPE_QUERY
+             if entity_type in ENTITY_TYPES else COMMON_ENTITIES_QUERY)
+
     job = bigquery.async_query(
         app_identity.get_application_id(),
-        COMMON_ENTITIES_QUERY.format(
-            limit=limit,
-            dataset=DATASET, table=TABLE,
-            column=column, value=sanitized_entity,
+        query.format(
+            dataset=DATASET, table=TABLE, limit=limit,
+            column=column, value=sanitized_entity, entity_type=entity_type,
         ))
     bigquery.poll_job(job)
     rows = bigquery.get_results(job)

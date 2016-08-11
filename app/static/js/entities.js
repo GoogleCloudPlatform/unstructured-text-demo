@@ -162,7 +162,11 @@ window.annotate = (function() {
     var elem = $(e.currentTarget);
     var token = elem.data('token');
 
-    var params = { limit: 10, page: 0 };
+    var params = {
+      type: token.type,
+      limit: 10,
+      page: 0
+    };
     if (token.metadata && token.metadata.wikipedia_url) {
       params.wiki = token.metadata.wikipedia_url;
     } else {
