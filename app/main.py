@@ -55,6 +55,7 @@ where article_id in (
     FROM [{dataset}.{table}]
     where {column} = '{value1}')
 and entity_name == '{name2}'
+limit {limit}
 '''.strip()
 URL_REGEX = re.compile(r'^https?://(\w+\.?)+/[\w:@%_.~!?$&\'()*+,;=/-]+$')
 NAME_REGEX = re.compile(r'^[\w \'.:-]+$')
@@ -79,8 +80,13 @@ def cached(timeout=5 * 60, query_params=None):
             if rv is not None:
                 return pickle.loads(zlib.decompress(rv))
             rv = f(*args, **kwargs)
-            cache.set(
-                cache_key, zlib.compress(pickle.dumps(rv)), timeout=timeout)
+            try:
+                cache.set(
+                    cache_key, zlib.compress(pickle.dumps(rv)),
+                    timeout=timeout)
+            except ValueError:
+                # Compressing isn't enough. No choice but not to cache
+                pass
             return rv
         return decorated_function
     return decorator
@@ -147,7 +153,7 @@ def common_entities():
 @cached(query_params=['wiki1', 'name1', 'name2', 'limit'])
 def pages_with_both():
     """Returns the wikipedia pages that contain both the two given entities."""
-    limit = min(int(request.args.get('limit', 10)), 100)
+    limit = min(int(request.args.get('limit', 100)), 100)
     wiki = request.args.get('wiki1')
     if wiki:
         if not URL_REGEX.match(wiki):
