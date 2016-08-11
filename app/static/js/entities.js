@@ -421,7 +421,7 @@ window.annotate = (function() {
               li.append('<i class="material-icons">event</i>');
               break;
             case 'WORK_OF_ART':
-              li.append('<i class="material-icons">color lens</i>');
+              li.append('<i class="material-icons">color_lens</i>');
               break;
             case 'CONSUMER_GOOD':
               li.append('<i class="material-icons">kitchen</i>');
@@ -430,7 +430,7 @@ window.annotate = (function() {
               li.append('<i class="material-icons">texture</i>');
               break;
             case 'UNKNOWN':
-              li.append('<i class="material-icons">crop square</i>');
+              li.append('<i class="material-icons">crop_square</i>');
               break;
           }
 
