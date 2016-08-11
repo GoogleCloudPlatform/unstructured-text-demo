@@ -15,12 +15,16 @@
 """Analyzes text using the Google Cloud Text API."""
 
 from googleapiclient import discovery
+import httplib2
 from oauth2client.client import GoogleCredentials
 
 
 def get_service():
-    credentials = GoogleCredentials.get_application_default()
-    return discovery.build('language', 'v1beta1', credentials=credentials)
+    credentials = GoogleCredentials.get_application_default().create_scoped([
+        'https://www.googleapis.com/auth/cloud-platform'])
+    http = httplib2.Http(timeout=60)
+    credentials.authorize(http)
+    return discovery.build('language', 'v1beta1', http=http)
 
 
 def annotate_text(text, encoding='UTF32',
