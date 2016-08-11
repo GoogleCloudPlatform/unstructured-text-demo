@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Custom Readers and such."""
+"""Custom Readers."""
 
 from apache_beam.io import filebasedsource
 
 
-def iterable_gcs(f):
-    """Create an iterable for a not-quite-filelike object.
+def _iterable_gcs(f):
+    """Create an generator for a not-quite-filelike object.
 
     FileBasedSource.open_file returns an object that doesn't implement the file
     interface completely, so we need this utility function in order to iterate
@@ -32,7 +32,7 @@ def iterable_gcs(f):
 
 
 class XmlFileSource(filebasedsource.FileBasedSource):
-    """Looks for the given element, and emits them as it finds them.
+    """A Beam source for XML that emits all instances of the given element.
 
     A custom source is necessary to enable parallelization of processing for the
     elements. The existing TextFileSource emits lines, but the Wikipedia XML
@@ -50,12 +50,13 @@ class XmlFileSource(filebasedsource.FileBasedSource):
         with self.open_file(file_name) as f:
             f.seek(offset_range_tracker.start_position() or 0)
 
-            iterable_f = iterable_gcs(f)
+            iterable_f = _iterable_gcs(f)
 
             while True:
                 current_pos = f.tell()
-                # Look for the start of a tag, or the end of the range we're
-                # responsible for.
+                # First, look for the start of a tag
+                # If we hit the end of the range allotted to us without finding
+                # an element, stop.
                 for line in iterable_f:
                     if self.open_tag in line:
                         if not offset_range_tracker.try_claim(current_pos):
@@ -64,10 +65,11 @@ class XmlFileSource(filebasedsource.FileBasedSource):
                         break
                     current_pos = f.tell()
                 else:
-                    # We ran off the end of the file. *shrug. Whatevs.
+                    # We ran off the end of the file without finding the tag.
+                    # This means we're done.
                     raise StopIteration()
 
-                # We're in a tag. Collect the contents of it.
+                # We're in a tag. Collect its contents and emit it.
                 for line in iterable_f:
                     content.append(line)
                     if self.close_tag in line:

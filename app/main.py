@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """`main` is the top level module for your Flask application."""
 
 from functools import wraps
@@ -19,9 +20,6 @@ import pickle
 import re
 import zlib
 
-import analyze_text
-import bigquery
-import wikipedia
 from flask import Flask
 from flask import jsonify
 from flask import render_template
@@ -30,10 +28,9 @@ from google.appengine.api import app_identity
 from requests_toolbelt.adapters import appengine
 from werkzeug.contrib.cache import GAEMemcachedCache
 
-
-appengine.monkeypatch()
-
-app = Flask(__name__)
+import analyze_text
+import bigquery
+import wikipedia
 
 
 DATASET = 'nl_wikipedia'
@@ -66,6 +63,10 @@ ENTITY_TYPES = set((
     'CONSUMER_GOOD'))
 
 
+# The `requests` library doesn't work on App Engine without some monkeypatching
+appengine.monkeypatch()
+
+app = Flask(__name__)
 cache = GAEMemcachedCache()
 
 
@@ -73,7 +74,7 @@ class ValidationError(Exception):
     pass
 
 
-def cached(timeout=5 * 60, query_params=None):
+def cached(timeout=30 * 60, query_params=None):
     """Cache a request handler based on keys in the query string."""
     def decorator(f):
         @wraps(f)
@@ -100,6 +101,7 @@ def cached(timeout=5 * 60, query_params=None):
 @app.route('/')
 @cached(query_params=['wiki_title'])
 def index():
+    """Runs a wikipedia page and through the Natural Language API."""
     wiki_title = request.args.get('wiki_title')
     context = {
         'log': math.log,
@@ -125,6 +127,7 @@ def index():
 @app.route('/common_entities')
 @cached(query_params=['wiki', 'type', 'limit'])
 def common_entities():
+    """Finds entities that share Wikipedia pages with the given entity."""
     limit = min(int(request.args.get('limit', 10)), 50)
     wiki = request.args.get('wiki')
     entity_type = request.args.get('type')

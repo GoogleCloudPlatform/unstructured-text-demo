@@ -16,16 +16,14 @@
 
 import logging
 import multiprocessing
-import random
-import time
 
 from googleapiclient import discovery
 from googleapiclient import http
 import httplib2shim
 from oauth2client.client import GoogleCredentials
-import urllib3
 
 
+# Global variable to cache the service object used to make API calls.
 _service = None
 
 
@@ -39,41 +37,42 @@ def get_service():
     return _service
 
 
-def _with_retries(f, name, max_retries=5, max_quota_retries=15):
-    retries = 0
-    variable_max = max_retries
-    while retries < variable_max:
-        retries += 1
+def _with_retries(f, name, num_retries=15):
+    """Retry the given request function.
+
+    This is currently necessary because a batch request object doesn't retry
+    requests.
+    """
+    for retry_num in range(num_retries + 1):
         try:
             result = f()
             break
         except http.HttpError as e:
             if e.resp.status >= 500:
                 logging.warning(
-                    '{}: NL Server error on retry {}: {}.\nSleeping..'.format(
-                        name, retries, e))
-                # retry once after waiting a beat
-                time.sleep(3 + random.random() * 5)
+                    '{}: Server error on retry {}: {}.\nSleeping..'.format(
+                        name, retry_num, e))
+                time.sleep(random.random() * 2 ** retry_num)
+
             elif e.resp.status == 429:
-                # ran into quota error
                 logging.warning(
-                    '{}: Quota error. Upping retries and sleeping'.format(
-                        name))
-                variable_max = max_quota_retries
-                time.sleep((5 * retries) + random.random() * 30)
+                    '{}: Quota error on retry {}: {}.\nSleeping.. '.format(
+                        name, retry_num, e))
+                time.sleep(random.random() * 2 ** retry_num)
+
             elif e.resp.status >= 400:
                 logging.error(
                     '{}: User error on retry {}: {}'.format(
-                        name, retries, e))
+                        name, retry_num, e))
                 raise
-            else:
-                variable_max = max_retries
 
         except urllib3.exceptions.HTTPError:
             pass
+
     else:
         logging.error('{}: Retries exhausted. Returning None'.format(name))
         return None
+
     return result
 
 
@@ -106,7 +105,7 @@ def annotate_text(text, encoding=None, extract_syntax=False,
         extract_document_sentiment)
     response = None
     try:
-        response = _with_retries(request.execute, 'annotate')
+        response = request.execute(num_retries=15)
     # This only happens for 400 errors
     except http.HttpError:
         logging.exception('Http error while annotating text.')
@@ -135,7 +134,7 @@ def annotate_text_batch(texts, *args, **kwargs):
             request_id=str(i))
 
     try:
-        _with_retries(batch.execute, 'NLbatch')
+        _with_retries(batch.execute, 'NL Batch')
     # This only happens for 400 errors
     except http.HttpError:
         return responses

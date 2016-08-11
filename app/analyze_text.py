@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Analyzes text using the Google Cloud Text API."""
+"""Analyzes text using the Google Cloud Text API.
+
+Adapted from:
+
+https://github.com/GoogleCloudPlatform/python-docs-samples/\
+    blob/master/language/api/analyze.py
+"""
 
 from googleapiclient import discovery
 import httplib2

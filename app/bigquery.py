@@ -11,13 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Command-line application to perform an asynchronous query in BigQuery.
+"""Perform an asynchronous query in BigQuery.
 
-This sample is used on this page:
+Adapted from:
 
-    https://cloud.google.com/bigquery/querying-data#asyncqueries
-
-For more information, see the README.md under /bigquery.
+https://github.com/GoogleCloudPlatform/python-docs-samples/\
+    blob/master/bigquery/api/async_query.py
 """
 
 import time

@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Parses all articles in a Wikipedia xml dump for entities and sentiment."""
+
 import json
 import logging
 import re
 
 import apache_beam
 from apache_beam.transforms import core
-import custom_sources
-import language
 from lxml import etree
 from lxml import html
 import mwparserfromhell
+
+import custom_sources
+import language
 
 
 # https://en.wikipedia.org/wiki/Wikipedia:Namespace
@@ -49,14 +52,15 @@ def _to_unicode(text):
 
 
 def html_to_text(content):
+    """Filter out html from the text."""
     text = content['text']
 
     try:
         text = html.document_fromstring(text).text_content()
     except etree.Error as e:
-        logging.error('Syntax error while processing {}: {}\n\n'
-                      'Falling back to regexes'.format(
-                          text, e))
+        logging.error(
+            'Syntax error while processing {}: {}\n\n'
+            'Falling back to regexes'.format(text, e))
         text = re.sub(r'<[^>]*>', '', text)
 
     text = _to_unicode(text)
@@ -68,10 +72,13 @@ def html_to_text(content):
 def parse_xml(xml):
     page = etree.fromstring(xml)
     children = dict((el.tag, el) for el in page)
+
     if 'redirect' in children:
         raise StopIteration()
+
     if WIKIPEDIA_NAMESPACES.match(children['title'].text):
         raise StopIteration()
+
     if 'id' in children:
         # Can't yield the page directly, because it's not picklable
         revisions = (rev.text for rev in children['revision'].iter('text'))
@@ -87,8 +94,9 @@ def _strip_code(parsed_md):
 
     Removes unprintable code from the mediawiki markdown, such as templates.
 
-    I was running into some unicode errors with mwparserfromhell's .strip_code()
-    method, so hack around that here."""
+    I was running into some unicode errors with mwparserfromhell's
+    .strip_code() method, so hack around that here.
+    """
     return (u' '.join((unicode(n.__strip__(True, True)) or '')
                       for n in parsed_md.nodes)).strip()
 
@@ -111,6 +119,7 @@ def parse_wikitext(content):
 
 
 def force_string_function(key):
+    """Returns a function that forces the value at the key to a string."""
     def force_string(d):
         if isinstance(d[key], unicode):
             d[key] = d[key].encode('utf8')
@@ -119,6 +128,11 @@ def force_string_function(key):
 
 
 def analyze_entities(content):
+    """Emits metadata for each entity in the content.
+
+    This includes the entity name, type, salience, as well as the article
+    sentiment, and the existing article metadata.
+    """
     if not content:
         raise StopIteration()
 
@@ -148,6 +162,10 @@ def analyze_entities(content):
 
 
 def analyze_entities_batch(content_list):
+    """Like analyze_entities, but performs the API call in a batch.
+
+    Note that, like analyze_entities, it still emits each entity individually.
+    """
     if not content_list:
         raise StopIteration()
 

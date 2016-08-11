@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Invokes Cloud Dataflow to perform language processing on Wikipedia."""
+
 import argparse
 import re
 
@@ -34,14 +37,16 @@ def gcs_uri(src):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('src', type=gcs_uri)
     parser.add_argument('dest')
 
     args, pipeline_args = parser.parse_known_args()
     try:
-        dest = bq_table_format_validator(args.dest)
-    except argparse.ArgumentTypeError:
         dest = gcs_uri(args.dest)
+    except argparse.ArgumentTypeError:
+        dest = bq_table_format_validator(args.dest)
 
     xml2entities.main(args.src, args.dest, pipeline_args)
