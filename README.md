@@ -42,8 +42,8 @@ This demo is split up into two parts:
     here][adc].
   * Install the dependencies into a `lib/` directory:
 
-      $ cd app/
-      $ pip install -r requirements.txt -t lib/
+          $ cd app/
+          $ pip install -r requirements.txt -t lib/
 
 [gae-python-sdk]: https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python
 [service-account]: https://console.cloud.google.com/iam-admin/serviceaccounts/project?project=_
@@ -55,8 +55,8 @@ This demo is split up into two parts:
 * For `app/`:
   * Run the local test server:
 
-      $ cd app/
-      $ dev_appserver.py .
+          $ cd app/
+          $ dev_appserver.py .
 
   * Visit the site at [http://localhost:8080/](http://localhost:8080)
 
