@@ -23,15 +23,15 @@ This tool creates a pipeline that:
 * Create a [Google Cloud Storage][gcs] bucket, and upload the file using
   either the [web UI][gcs-web] or [gsutil][gsutil]:
 
-    $ gsutil cp [wikipedia-dump.xml] gs://[your-bucket]/
+      $ gsutil cp [wikipedia-dump.xml] gs://[your-bucket]/
 
 * [Create a BigQuery dataset][create-bq] that will contain destination table.
 * Define some environment variables (which will be referenced below):
 
-      MY_PROJECT=[your-project-name]
-      MY_BUCKET=[your-bucket]
-      GCS_PATH_TO_XML=gs://$MY_BUCKET/[path/to/wikipedia.xml]
-      BIGQUERY_DESTINATION_TABLE="$MY_PROJECT:[your-dataset].[table-name]"
+        MY_PROJECT=[your-project-name]
+        MY_BUCKET=[your-bucket]
+        GCS_PATH_TO_XML=gs://$MY_BUCKET/[path/to/wikipedia.xml]
+        BIGQUERY_DESTINATION_TABLE="$MY_PROJECT:[your-dataset].[table-name]"
 
 [cloud-console]: https://console.cloud.google.com
 [gcloud]: https://cloud.google.com/sdk/gcloud/
@@ -44,22 +44,22 @@ This tool creates a pipeline that:
 
 * Install the prerequisites for the script in a [virtualenv][venv]:
 
-    $ cd tools/
-    $ virtualenv v
-    $ source v/bin/activate
-    $ pip install -r requirements.txt
+      $ cd tools/
+      $ virtualenv v
+      $ source v/bin/activate
+      $ pip install -r requirements.txt
 
 * You can run the entire pipeline at once:
 
-    python main.py "$GCS_PATH_TO_XML" "$BIGQUERY_DESTINATION_TABLE" \
-        --job_name 'wikipedia-ingestion' --project "$MY_PROJECT" \
-        --runner 'BlockingDataflowPipelineRunner' \
-        --staging_location "gs://$MY_BUCKET/staging" \
-        --temp_location "gs://$MY_BUCKET/temp" \
-        --setup_file $PWD/setup.py \
-        --autoscaling_algorithm=THROUGHPUT_BASED \
-        # Limit disk size to avoid going over disk quota as the job scales up
-        --disk_size_gb=10
+        python main.py "$GCS_PATH_TO_XML" "$BIGQUERY_DESTINATION_TABLE" \
+            --job_name 'wikipedia-ingestion' --project "$MY_PROJECT" \
+            --runner 'BlockingDataflowPipelineRunner' \
+            --staging_location "gs://$MY_BUCKET/staging" \
+            --temp_location "gs://$MY_BUCKET/temp" \
+            --setup_file $PWD/setup.py \
+            --autoscaling_algorithm=THROUGHPUT_BASED \
+            # Limit disk size to avoid going over disk quota as the job scales up
+            --disk_size_gb=10
 
 * Or you can run it in pieces (for example, so that if there's an error, you
   don't have to start again from the beginning):
@@ -68,15 +68,15 @@ This tool creates a pipeline that:
     that the steps are 0-indexed (ie the first step is step 0), and the pipeline
     includes all the steps up to, but not including, the `--end` step.
 
-      python main.py "$GCS_PATH_TO_XML" "gs://$MY_BUCKET/articles.json" \
-          --end 5 \
-          --job_name 'wikipedia-ingestion-1' --project "$MY_PROJECT" \
-          --runner 'BlockingDataflowPipelineRunner' \
-          --staging_location "gs://$MY_BUCKET/staging \
-          --temp_location "gs://$MY_BUCKET/temp" \
-          --setup_file $PWD/setup.py \
-          --autoscaling_algorithm=THROUGHPUT_BASED \
-          --disk_size_gb=10
+        python main.py "$GCS_PATH_TO_XML" "gs://$MY_BUCKET/articles.json" \
+            --end 5 \
+            --job_name 'wikipedia-ingestion-1' --project "$MY_PROJECT" \
+            --runner 'BlockingDataflowPipelineRunner' \
+            --staging_location "gs://$MY_BUCKET/staging \
+            --temp_location "gs://$MY_BUCKET/temp" \
+            --setup_file $PWD/setup.py \
+            --autoscaling_algorithm=THROUGHPUT_BASED \
+            --disk_size_gb=10
 
   * Wait while Dataflow parses Wikipedia's XML, markdown, and HTML; filters out
     redirects and metapages; converts to JSON; and saves to intermediate Cloud
@@ -87,14 +87,14 @@ This tool creates a pipeline that:
     pipeline includes all the steps starting from, and including, the `--start`
     step.
 
-      python main.py "$GCS_PATH_TO_XML" "gs://$MY_BUCKET/articles.json*" \
-          --start 5 \
-          --job_name 'wikipedia-ingestion-1' --project "$MY_PROJECT" \
-          --runner 'BlockingDataflowPipelineRunner' \
-          --staging_location "gs://$MY_BUCKET/staging \
-          --temp_location "gs://$MY_BUCKET/temp" \
-          --setup_file $PWD/setup.py \
-          --autoscaling_algorithm=THROUGHPUT_BASED \
-          --disk_size_gb=10
+        python main.py "$GCS_PATH_TO_XML" "gs://$MY_BUCKET/articles.json*" \
+            --start 5 \
+            --job_name 'wikipedia-ingestion-1' --project "$MY_PROJECT" \
+            --runner 'BlockingDataflowPipelineRunner' \
+            --staging_location "gs://$MY_BUCKET/staging \
+            --temp_location "gs://$MY_BUCKET/temp" \
+            --setup_file $PWD/setup.py \
+            --autoscaling_algorithm=THROUGHPUT_BASED \
+            --disk_size_gb=10
 
 [venv]: https://virtualenv.pypa.io/en/stable/
