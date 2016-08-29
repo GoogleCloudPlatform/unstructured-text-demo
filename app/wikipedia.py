@@ -26,7 +26,7 @@ HEADERS = {
 }
 
 
-def get_article(titles=None, pageids=None):
+def get_article(titles=None, pageids=None, query=None):
     """Uses the MediaWiki API to fetch Wikipedia pages."""
     headers = HEADERS
     params = {
@@ -40,6 +40,16 @@ def get_article(titles=None, pageids=None):
         params['titles'] = titles
     if pageids:
         params['pageids'] = pageids
+    if query:
+        search_params = {
+            'list': 'search',
+            'srsearch': query
+        }
+        search_params.update(params)
+        r = requests.get(WIKIPEDIA_BASE, params=search_params, headers=headers)
+        r.raise_for_status()
+
+        params['titles'] = r.json()['query']['search'][0]['title']
 
     r = requests.get(WIKIPEDIA_BASE, params=params, headers=headers)
     r.raise_for_status()
@@ -47,9 +57,10 @@ def get_article(titles=None, pageids=None):
     return content
 
 
-def get_article_content(title):
+def get_article_content(*args, **kwargs):
     """Gets the contents of the articles with the given title."""
-    pages = get_article(title)['query']['pages']
+    result = get_article(*args, **kwargs)
+    pages = result['query']['pages']
     content = []
     for v in pages.itervalues():
         title = v['title']

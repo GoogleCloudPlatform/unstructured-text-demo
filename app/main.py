@@ -61,6 +61,7 @@ NAME_REGEX = re.compile(r'^[\w \'.:-]+$')
 ENTITY_TYPES = set((
     'PERSON', 'LOCATION', 'ORGANIZATION', 'EVENT', 'WORK_OF_ART',
     'CONSUMER_GOOD'))
+INVALID_CACHE_KEY_CHARS = re.compile(r'\s')
 
 
 # The `requests` library doesn't work on App Engine without some monkeypatching
@@ -79,7 +80,8 @@ def cached(timeout=30 * 60, query_params=None):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            cache_key = request.path + '?' + (
+            cache_key = request.path + '?' + re.sub(
+                r'\s', '_',
                 '|'.join(request.args.get(qp, qp) for qp in query_params)
                 if query_params else request.query_string)
             rv = cache.get(cache_key)
@@ -110,7 +112,7 @@ def index():
     if wiki_title:
         context['wiki_title'] = wiki_title
         context['page_title'], page_content = (
-            wikipedia.get_article_content(wiki_title))[0]
+            wikipedia.get_article_content(query=wiki_title))[0]
 
         analysis = analyze_text.annotate_text(
             page_content, encoding='UTF16',
