@@ -61,7 +61,6 @@ NAME_REGEX = re.compile(r'^[\w \'.:-]+$')
 ENTITY_TYPES = set((
     'PERSON', 'LOCATION', 'ORGANIZATION', 'EVENT', 'WORK_OF_ART',
     'CONSUMER_GOOD'))
-INVALID_CACHE_KEY_CHARS = re.compile(r'\s')
 
 
 # The `requests` library doesn't work on App Engine without some monkeypatching
