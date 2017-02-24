@@ -44,10 +44,10 @@ This tool creates a pipeline that:
 
 * Install the prerequisites for the script in a [virtualenv][venv]:
 
-      $ cd tools/
-      $ virtualenv v
-      $ source v/bin/activate
-      $ pip install -r requirements.txt
+        $ cd tools/
+        $ virtualenv v
+        $ source v/bin/activate
+        $ pip install -r requirements.txt
 
 * You can run the entire pipeline at once:
 
