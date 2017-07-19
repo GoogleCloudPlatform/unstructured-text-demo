@@ -19,13 +19,16 @@ import logging
 import re
 
 import apache_beam
+import apache_beam.io
 from apache_beam.transforms import core
-from lxml import etree
-from lxml import html
-import mwparserfromhell
+from apache_beam.transforms import window
+from apache_beam.utils.windowed_value import WindowedValue
 
 import custom_sources
 import language
+from lxml import etree
+from lxml import html
+import mwparserfromhell
 
 
 # https://en.wikipedia.org/wiki/Wikipedia:Namespace
@@ -201,48 +204,43 @@ class BatchFn(core.DoFn):
     def __init__(self, batch_size, *args, **kwargs):
         self._batch_size = batch_size
 
-    def start_bundle(self, context):
+    def start_bundle(self):
         self._batch = []
 
-    def process(self, context, *args, **kwargs):
-        self._batch.append(context.element)
+    def process(self, element, *args, **kwargs):
+        self._batch.append(element)
         if len(self._batch) >= self._batch_size:
             batch = self._batch
             self._batch = []
             yield batch
 
-    def finish_bundle(self, context, *args, **kwargs):
+    def finish_bundle(self, *args, **kwargs):
         if self._batch:
-            yield self._batch
+            yield WindowedValue(self._batch, -1, [window.GlobalWindow()])
 
 
 def main(gcs_path, out, start=None, end=None, pipeline_args=None):
     steps = [
-        apache_beam.FlatMap('Parse XML and filter', parse_xml),
-        apache_beam.Map(
-            'Coerce "wikitext" key to string type',
-            force_string_function('wikitext')),
-        apache_beam.FlatMap('Parse markdown into plaintext', parse_wikitext),
-        apache_beam.Map(
-            'Coerce "text" key to string type', force_string_function('text')),
-        apache_beam.Map(
-            'Filter out any vestigial HTML', html_to_text),
-
-        core.ParDo('batch', BatchFn(10)),
-        apache_beam.FlatMap(
-            'Entities (batch)', analyze_entities_batch),
+        'Parse XML and filter' >> apache_beam.FlatMap(parse_xml),
+        'Coerce "wikitext" key to string type' >> apache_beam.Map(
+                force_string_function('wikitext')),
+        'Parse markdown into plaintext' >> apache_beam.FlatMap(parse_wikitext),
+        'Coerce "text" key to string type' >> apache_beam.Map(
+                force_string_function('text')),
+        'Filter out any vestigial HTML' >> apache_beam.Map(html_to_text),
+        'batch' >> core.ParDo(BatchFn(10)),
+        'Entities (batch)' >> apache_beam.FlatMap(analyze_entities_batch)
     ]
 
     p = apache_beam.Pipeline(argv=pipeline_args)
 
     if start:
-        value = p | apache_beam.Read(
-            'Pick up at step {}'.format(start), apache_beam.io.TextFileSource(
-                gcs_path)) | \
-            apache_beam.Map('Parse JSON', json.loads)
+        value = p | 'Pick up at step {}'.format(start) >> apache_beam.io.Read(
+                apache_beam.io.TextFileSource(gcs_path)) | \
+            'Parse JSON' >> apache_beam.Map(json.loads)
     else:
-        value = p | apache_beam.Read(
-            'Read XML', custom_sources.XmlFileSource('page', gcs_path))
+        value = p | 'Read XML' >> apache_beam.io.Read(
+                custom_sources.XmlFileSource('page', gcs_path))
 
     for step in steps[start:end]:
         value = value | step
@@ -250,11 +248,12 @@ def main(gcs_path, out, start=None, end=None, pipeline_args=None):
     if end:
         if not out.startswith('gs://'):
             raise ValueError('Output must be GCS path if an end is specified.')
-        value = value | apache_beam.Map('to JSON', json.dumps) | \
-            apache_beam.Write('Dump to GCS', apache_beam.io.TextFileSink(out))
+        value = value | 'to JSON' >> apache_beam.Map(json.dumps) | \
+            'Dump to GCS' >> apache_beam.io.Write(
+                    apache_beam.io.WriteToText(out))
     else:
-        value = value | apache_beam.Write(
-            'Dump metadata to BigQuery', apache_beam.io.BigQuerySink(
+        value = value | 'Dump metadata to BigQuery' >> apache_beam.io.Write(
+            apache_beam.io.BigQuerySink(
                 out,
                 schema=', '.join([
                     'article_id:STRING',
