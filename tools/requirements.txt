@@ -1,8 +1,8 @@
-google-cloud-dataflow==0.4.0
-mwparserfromhell==0.4.3
-lxml==3.6.0
+google-cloud-dataflow==2.0.0
+mwparserfromhell==0.4.4
+lxml==3.7.3
 -e git+git://github.com/google/google-api-python-client.git@68bce4ea78c5cbb4578b8a380886d18b35156a10#egg=google-api-python-client
-requests==2.8.1
-urllib3[secure]==1.16
-httplib2shim==0.0.1
-futures==3.0.5
+requests==2.17.3
+urllib3[secure]==1.21.1
+httplib2shim==0.0.2
+futures==3.1.1

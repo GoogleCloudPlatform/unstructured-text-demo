@@ -75,18 +75,18 @@ def _run_custom_command(command_list):
 
 # Configure the required packages and scripts to install.
 REQUIRED_PACKAGES = [
-    'mwparserfromhell==0.4.3',
+    'mwparserfromhell==0.4.4',
     # 'lxml',  # Install this manually later, after apt-get'ing dependencies.
     'google-api-python-client',
-    'requests==2.8.1',
-    'urllib3==1.16',
-    'httplib2shim==0.0.1',
-    'futures==3.0.5',
+    'requests==2.17.3',
+    'urllib3==1.21.1',
+    'httplib2shim==0.0.2',
+    'futures==3.1.1',
     ]
 
 setuptools.setup(
     name='wikipedianl',
-    version='0.0.1',
+    version='0.0.2',
     description='wikipedia NL workflow package.',
     install_requires=REQUIRED_PACKAGES,
     packages=setuptools.find_packages(),
